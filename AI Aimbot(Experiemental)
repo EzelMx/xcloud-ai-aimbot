@@ -3,19 +3,18 @@
         detection: {
             enabled: true,
             betterDetection: {
-                enabled: true // allows the AI to see outside of the FOV making detection better at longer ranges and better overall
+                enabled: true // Allows the AI to see outside of the FOV making detection better at longer ranges
             },
             modelType: poseDetection.SupportedModels.MoveNet,
             detectorConfig: {
-                modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER, // if the detection sucks so bad despite betterdetection pls use THUNDER instead of LIGHTNING it uses a bigger dataset
+                modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING, // Switch to THUNDER for higher accuracy if needed
                 enableSmoothing: true,
-                minPoseScore: 0.25 // low confidences for the sake of getting a detection out of lighting if you use thunder it can see through walls better and u can use 0.35 and still get a detection and lesser false positives
+                minPoseScore: 0.15 
             },
             keypointConfidence: 0.20,
             maxDetections: 5,
             processingInterval: 5,
-            skipFrames: 1, // gives more fps for a more consistent aimbot but skips frames, if your fps is like 60 and 50ms and below u probably wont feel the frameskip and it will just feel like you got a fps boost
-            // skip frames can also increase the amount of frames it takes for the aimbot to fully reach the target so it can basically slower speed 0 gives wobbles if ur fps is below 120 2 is ideal
+            skipFrames: 1, // Skip frames to optimize CPU/GPU rendering cycles
             ignoreSelfRegion: {
                 enabled: true,
                 xPercent: 0.00,
@@ -25,7 +24,7 @@
             }
         },
         game: {
-            videoSelector: 'video[aria-label="Game Stream for unknown title"]', // Will be updated automatically allowing for multi-language support thank you matrix you are probably the 1 person in my server that isnt a skid
+            videoSelector: 'video[aria-label="Game Stream for unknown title"]',
             containerSelector: '#game-stream',
             autoShoot: false,
             triggerOptions: {
@@ -39,39 +38,27 @@
             alwaysOn: {
                 enabled: false // When true, aimbot is always on and the aimkey disables it.
             },
-            activationKey: 'MouseRight', // KeyQ is for q KeyE is for e ETC.
-            activationButton: 'A', // bind for controller players
-            toggleMode: false, // Note: This is ignored if alwaysOn is enabled.
+            activationKey: 'MouseRight',
+            activationButton: 'A', // Bind for controller players
+            toggleMode: false, 
             fovRadius: 136,
-            aimPoint: "center", // Options: center, nose (head), neck, torso, pelvis, left_eye, right_eye, left_shoulder, right_shoulder, left_elbow, right_elbow, left_hip, right_hip, left_knee, right_knee, left_ankle, right_ankle
+            aimPoint: "left_hip", // nose, left_eye, right_shoulder, left_hip, etc.
             headOffset: 0.15,
             bodyOffset: 0.4,
             targetPriority: "center",
-            targetSwitchCooldown: 0, // my dumbahh had it on 0.1 instead of just 0 thinking it had to be a positive number to work but it just need to be 0 to be off, anyways this is the delay inbetween target switching which frameskipping can start this if its not 0
+            targetSwitchCooldown: 0,
             triggerThreshold: 0.7,
-            
-            // --- NEW: PRECISION STABILIZER ---
-            // This replaces simple speed reduction with advanced filtering to eliminate wobbles.
-            stabilizer: {
-                enabled: true,
-                deadzone: 0.3, // Pixels. If aim is within this radius of the target center, it stops moving completely to prevent micro-jitters.
-                baseSmoothing: 0.85, // 0.0 - 1.0. Higher = More 'robotic' and direct. Lower = Smoother and more human-like.
-                dynamicGain: true, // If true, smoothing increases (speed decreases) as you get closer to target.
-                minSmoothing: 0.15 // The floor for smoothing when extremely close to target (makes it stick like glue without vibrating).
-            },
-
             aimSpeed: {
                 enabled: true,
-                speedPercent: 55.3 // Note: If stabilizer is on, this acts as a global sensitivity cap.
+                speedPercent: 55.3 // Tailored for 7.4 sens / 45 ads sens in Fortnite
             },
-            // smartSlowdown is now DISABLED by default as the Stabilizer handles this better.
             smartSlowdown: { 
-                enabled: false, 
-                maxSpeed: 100.0,
-                minSpeed: 33.3,
-                slowdownRadius: 75,
+                enabled: true,
+                maxSpeed: 100.0, 
+                minSpeed: 30.9, 
+                slowdownRadius: 90,
                 nonlinear: {
-                    enabled: false,
+                    enabled: true,
                     exponent: 1.5
                 },
                 prediction: {
@@ -82,17 +69,17 @@
                 minFpsThreshold: 30
             },
             prediction: {
-                enabled: false, // This is now disabled by default.
-                latencyCompensation: 75, // Default value, will be updated dynamically.
+                enabled: false,
+                latencyCompensation: 75,
                 jitterBufferSize: 5,
                 maxVelocity: 1000,
                 smoothingFactor: 0.2,
-                predictionScale: 1.1 // A more conservative scale to prevent over-prediction.
+                predictionScale: 1.1 
             }
         },
         controller: {
-            enabled: false, // controller support is buggy i think idrk test it out
-            useVirtualGamepad: false, // experimental feature that i really recommend u dont use it tries to make the ai aimbot use controller movements for aiming at the target which is very buggy
+            enabled: false,
+            useVirtualGamepad: false, 
             deadZone: 0.2,
             sensitivity: {
                 x: 2.0,
@@ -104,8 +91,6 @@
         visual: {
             showDebugInfo: true,
             esp: {
-                // When on, ESP is only shown when you are pressing your aim key.
-                // When off, ESP is always visible. this also means the ai model is constantly running so u get lower fps if ur device is shit
                 showOnlyWhenAiming: true
             },
             crosshair: {
@@ -212,7 +197,7 @@
                 index: null,
                 lastButtonStates: {},
                 lastAxes: [0, 0, 0, 0],
-                aimActive: false, // Will be initialized based on config
+                aimActive: false,
                 virtualGamepad: {
                     active: false,
                     axes: [0, 0, 0, 0],
@@ -228,19 +213,11 @@
             targetHistory: {},
             lastPrediction: { x: 0, y: 0 },
             backend: 'unknown'
-        },
-        // State for the new stabilizer
-        stabilizer: {
-            lastX: 0,
-            lastY: 0,
-            initialized: false
         }
     };
 
-    // Save original getGamepads method for virtual gamepad support
     const originalGetGamepads = navigator.getGamepads.bind(navigator);
 
-    // Create virtual gamepad
     const virtualGamepad = {
         id: "Virtual Gamepad",
         connected: true,
@@ -251,7 +228,6 @@
         index: 0
     };
 
-    // Override getGamepads to include virtual gamepad when active
     navigator.getGamepads = function() {
         if (config.controller.enabled && config.controller.useVirtualGamepad && state.input.gamepad.virtualGamepad.active) {
             virtualGamepad.timestamp = performance.now();
@@ -277,20 +253,16 @@
         setTimeout(() => n.remove(), duration);
     }
     
-    // =================================================================================================
-    // NEW DYNAMIC STATS PARSER
-    // This section reads the stream stats from the HTML element and updates the config.
-    // =================================================================================================
-    
+    // Fallback wildcards make sure this parser doesn't break when xCloud's minified styles change
     function updatePredictionFromStreamStats() {
-        const statsElement = document.querySelector('.StreamStats-module__container___UPibv');
+        const statsElement = document.querySelector('.StreamStats-module__container___UPibv') || 
+                             document.querySelector('[class*="StreamStats-module__container"]');
         if (!statsElement || !statsElement.textContent) {
-            return; // Exit if the element isn't found
+            return;
         }
     
         const statsText = statsElement.textContent;
     
-        // Use regular expressions to find the values
         const pingMatch = statsText.match(/Ping: (\d+) ms/);
         const jitterMatch = statsText.match(/Jitter: (\d+) ms/);
         const decodeMatch = statsText.match(/Decode: ([\d.]+) ms/);
@@ -299,21 +271,13 @@
         const jitter = jitterMatch ? parseInt(jitterMatch[1], 10) : 0;
         const decode = decodeMatch ? parseFloat(decodeMatch[1]) : 0;
     
-        // Calculate the total latency. This is a more accurate way to compensate.
-        // We add Ping, Jitter, and Decode time together.
         const totalLatency = ping + jitter + decode;
     
-        // Update the prediction configuration if the new value is valid
         if (totalLatency > 0 && config.aim.prediction.latencyCompensation !== totalLatency) {
             config.aim.prediction.latencyCompensation = totalLatency;
             debug.log(`Prediction updated. Latency Compensation: ${totalLatency.toFixed(1)}ms (Ping: ${ping}ms, Jitter: ${jitter}ms, Decode: ${decode.toFixed(1)}ms)`);
         }
     }
-
-    // =================================================================================================
-    // PREDICTION SYSTEM
-    // Handles target movement prediction for no wobbles in aiming.
-    // =================================================================================================
 
     function initializeTargetHistory(targetId) {
         if (!state.prediction.targetHistory[targetId]) {
@@ -331,6 +295,7 @@
         const history = state.prediction.targetHistory[targetId];
         history.positions.push({ x: position.x, y: position.y });
         history.timestamps.push(timestamp);
+        
         if (history.positions.length > 1) {
             const prevPos = history.positions[history.positions.length - 2];
             const prevTime = history.timestamps[history.timestamps.length - 2];
@@ -342,11 +307,13 @@
                 const limitedVx = Math.max(-maxV, Math.min(maxV, vx));
                 const limitedVy = Math.max(-maxV, Math.min(maxV, vy));
                 history.velocities.push({ x: limitedVx, y: limitedVy });
+                
                 const smoothing = config.aim.prediction.smoothingFactor;
                 history.smoothedVelocity.x = history.smoothedVelocity.x * (1 - smoothing) + limitedVx * smoothing;
                 history.smoothedVelocity.y = history.smoothedVelocity.y * (1 - smoothing) + limitedVy * smoothing;
             }
         }
+        
         const bufferSize = config.aim.prediction.jitterBufferSize;
         if (history.positions.length > bufferSize) {
             history.positions.shift();
@@ -356,24 +323,19 @@
     }
 
     function calculatePredictedPosition(targetId) {
-        if (!state.prediction.targetHistory[targetId] ||
-            state.prediction.targetHistory[targetId].positions.length < 2) {
+        const history = state.prediction.targetHistory[targetId];
+        if (!history || history.positions.length < 2) {
             return null;
         }
-        const history = state.prediction.targetHistory[targetId];
         const currentPos = history.positions[history.positions.length - 1];
-        const currentTime = history.timestamps[history.timestamps.length - 1];
-        // The latencyCompensation is now dynamically updated from stream stats
-        const totalLatency = state.performance.detectionTime +
-                           config.aim.prediction.latencyCompensation; 
+        const totalLatency = state.performance.detectionTime + config.aim.prediction.latencyCompensation; 
         const vx = history.smoothedVelocity.x;
         const vy = history.smoothedVelocity.y;
         const scale = config.aim.prediction.predictionScale;
-        const predictedX = currentPos.x + (vx * totalLatency / 1000) * scale;
-        const predictedY = currentPos.y + (vy * totalLatency / 1000) * scale;
+        
         return {
-            x: predictedX,
-            y: predictedY,
+            x: currentPos.x + (vx * totalLatency / 1000) * scale,
+            y: currentPos.y + (vy * totalLatency / 1000) * scale,
             velocityX: vx,
             velocityY: vy
         };
@@ -398,7 +360,8 @@
                 { name: 'webgl', test: () => true }
             ];
             let selectedBackend = null;
-            for (const backend of backends) {
+            for (let i = 0; i < backends.length; i++) {
+                const backend = backends[i];
                 if (backend.test()) {
                     try {
                         await tf.setBackend(backend.name);
@@ -431,11 +394,6 @@
         }
     }
 
-    // =================================================================================================
-    // MODEL LOADING
-    // Loads the AI model for pose detection.
-    // =================================================================================================
-
     async function loadDetectionModel() {
         debug.log("Loading the AI model");
         try {
@@ -460,23 +418,22 @@
         }
     }
 
-    // =================================================================================================
-    // TARGET DETECTION
-    // Detects players in the game-stream using AI.
-    // =================================================================================================
-
+    // High performance keypoint processor (Replaced .forEach with standard loop to optimize frame rate)
     function calculateBoundingBoxFromKeypoints(kps) {
         if (!kps || kps.length === 0) return null;
         let mX = Infinity, mY = Infinity, mAX = -Infinity, mAY = -Infinity, vK = 0;
-        kps.forEach(k => {
-            if (k.score && k.score >= config.detection.keypointConfidence) {
+        const len = kps.length;
+        const conf = config.detection.keypointConfidence;
+        for (let i = 0; i < len; i++) {
+            const k = kps[i];
+            if (k.score && k.score >= conf) {
                 mX = Math.min(mX, k.x);
                 mY = Math.min(mY, k.y);
                 mAX = Math.max(mAX, k.x);
                 mAY = Math.max(mAY, k.y);
                 vK++;
             }
-        });
+        }
         if (vK < 5) return null;
         const w = mAX - mX, h = mAY - mY, pX = 0.1 * w, pY = 0.1 * h;
         return {
@@ -491,7 +448,10 @@
     function calculateAimTarget(pred, vRect) {
         if (!pred || !pred.keypoints || !vRect || !state.gameVideo) return null;
 
-        const keypointsMap = new Map(pred.keypoints.map(kp => [kp.name, kp]));
+        const keypointsMap = new Map();
+        for (let i = 0; i < pred.keypoints.length; i++) {
+            keypointsMap.set(pred.keypoints[i].name, pred.keypoints[i]);
+        }
 
         const getKp = (name) => {
             const kp = keypointsMap.get(name);
@@ -537,42 +497,11 @@
                 }
                 break;
             }
-            case 'center': {
-                // FIXED: Now calculates Center of Mass (Average of Shoulders and Hips) 
-                // instead of bounding box geometric center (which includes feet/legs).
-                const lShoulder = getKp('left_shoulder');
-                const rShoulder = getKp('right_shoulder');
-                const lHip = getKp('left_hip');
-                const rHip = getKp('right_hip');
-                
-                const validPoints = [lShoulder, rShoulder, lHip, rHip].filter(p => p !== null);
-                
-                if (validPoints.length >= 2) {
-                    // Average position of torso keypoints
-                    const sumX = validPoints.reduce((s, p) => s + p.x, 0);
-                    const sumY = validPoints.reduce((s, p) => s + p.y, 0);
-                    targetPos = {
-                        x: sumX / validPoints.length,
-                        y: sumY / validPoints.length
-                    };
-                } else {
-                    // Fallback to bounding box but biased upwards (0.4 instead of 0.5) to avoid aiming at legs
-                    const [vBx, vBy, vBw, vBh] = pred.bbox || [0, 0, 0, 0];
-                    if (vBw > 0) {
-                         targetPos = {
-                            x: vRect.left + (vBx + vBw / 2) / state.gameVideo.videoWidth * vRect.width,
-                            y: vRect.top + (vBy + vBh * 0.4) / state.gameVideo.videoHeight * vRect.height
-                        };
-                    }
-                }
-                break;
-            }
-            default: // Allows direct keypoint names
+            default:
                 targetPos = getKp(aimPart);
                 break;
         }
 
-        // Fallback to bounding box center if the desired part is not visible
         if (!targetPos) {
             const [vBx, vBy, vBw, vBh] = pred.bbox || [0, 0, 0, 0];
             if (vBw > 0) {
@@ -591,7 +520,6 @@
             return null;
         }
 
-        // If we found a keypoint-based target, we still need width/height for other parts of the script
         const [vBx, vBy, vBw, vBh] = pred.bbox || [0, 0, 0, 0];
         const sBw = vBw / state.gameVideo.videoWidth * vRect.width;
         const sBh = vBh / state.gameVideo.videoHeight * vRect.height;
@@ -605,56 +533,56 @@
         };
     }
 
+    // Performance-optimized target selector using raw index loops
     function findBestTarget(predictions) {
-        if (!predictions || !Array.isArray(predictions) || predictions.length === 0) return null;
-        if (!state.gameVideo) return null;
+        if (!predictions || predictions.length === 0 || !state.gameVideo) return null;
         const videoRect = state.gameVideo.getBoundingClientRect();
         if (!videoRect || videoRect.width === 0) return null;
+        
         const gameScreenCenterX = videoRect.left + videoRect.width / 2;
         const gameScreenCenterY = videoRect.top + videoRect.height / 2;
         let bestTarget = null;
         let bestScore = Infinity;
-        predictions.forEach((prediction, index) => {
+        
+        const maxFov = config.aim?.fovRadius || 200;
+        const priorityType = config.aim?.targetPriority;
+
+        for (let i = 0; i < predictions.length; i++) {
+            const prediction = predictions[i];
             const targetInfo = calculateAimTarget(prediction, videoRect);
-            if (!targetInfo) return;
-            let referenceX, referenceY;
-            if (config.aim?.targetPriority === "center") {
-                referenceX = gameScreenCenterX;
-                referenceY = gameScreenCenterY;
-            } else {
-                referenceX = state.input.lastMouseX;
-                referenceY = state.input.lastMouseY;
-            }
+            if (!targetInfo) continue;
+
+            const referenceX = priorityType === "center" ? gameScreenCenterX : state.input.lastMouseX;
+            const referenceY = priorityType === "center" ? gameScreenCenterY : state.input.lastMouseY;
+            
             const dx = targetInfo.x - referenceX;
             const dy = targetInfo.y - referenceY;
             const distanceToPriorityPoint = Math.sqrt(dx * dx + dy * dy);
-            if (distanceToPriorityPoint > (config.aim?.fovRadius || 200)) return;
-            let score = distanceToPriorityPoint * (1.5 - (prediction.score || 0));
+            
+            if (distanceToPriorityPoint > maxFov) continue;
+            const score = distanceToPriorityPoint * (1.5 - (prediction.score || 0));
             if (score < bestScore) {
                 bestScore = score;
                 bestTarget = {
                     ...prediction,
                     screenPosition: targetInfo,
                     distance: distanceToPriorityPoint,
-                    id: index
+                    id: i
                 };
             }
-        });
+        }
         return bestTarget;
     }
-
 
     const InputController = {
         init: function() {
             state.input.lastMouseX = window.innerWidth / 2;
             state.input.lastMouseY = window.innerHeight / 2;
-
-            // --- MODIFIED: Set initial aim state based on config ---
             state.input.gamepad.aimActive = config.aim.alwaysOn.enabled;
+            
             if (config.aim.alwaysOn.enabled) {
                 showNotification('Aimbot is Always-On. Hold aimkey to disable.', 'info');
             }
-            // --- END MODIFICATION ---
 
             document.addEventListener('mousemove', e => {
                 state.input.lastMouseX = e.clientX;
@@ -671,14 +599,12 @@
                     state.input.leftButtonDown = true;
                     state.input.shootingStartTime = performance.now();
                 }
-                // --- MODIFIED: Handle "always on" logic ---
                 if (e.button === 2) {
                     state.input.rightButtonDown = true;
                     if (config.aim.activationKey === 'MouseRight') {
                         if (config.aim.alwaysOn.enabled) {
-                            state.input.gamepad.aimActive = false; // Disable on press
+                            state.input.gamepad.aimActive = false;
                         } else {
-                            // Original logic
                             if (config.aim.toggleMode && !state.input.gamepad.aimActive) {
                                 state.input.gamepad.aimActive = true;
                                 showNotification('Aimbot enabled (Right-click)', 'info');
@@ -688,21 +614,18 @@
                         }
                     }
                 }
-                // --- END MODIFICATION ---
             });
             document.addEventListener('mouseup', e => {
                 if (e.button === 0) {
                     state.input.leftButtonDown = false;
                     state.input.shootingStartTime = 0;
                 }
-                // --- MODIFIED: Handle "always on" logic ---
                 if (e.button === 2) {
                     state.input.rightButtonDown = false;
                     if (config.aim.activationKey === 'MouseRight') {
                         if (config.aim.alwaysOn.enabled) {
-                            state.input.gamepad.aimActive = true; // Re-enable on release
+                            state.input.gamepad.aimActive = true;
                         } else {
-                            // Original logic
                             if (config.aim.toggleMode && state.input.gamepad.aimActive) {
                                 state.input.gamepad.aimActive = false;
                                 showNotification('Aimbot disabled (Right-click)', 'info');
@@ -712,7 +635,6 @@
                         }
                     }
                 }
-                // --- END MODIFICATION ---
             });
 
             if (config.controller.enabled) {
@@ -725,7 +647,7 @@
                 window.addEventListener('gamepaddisconnected', e => {
                     state.input.gamepad.connected = false;
                     state.input.gamepad.index = null;
-                    state.input.gamepad.aimActive = config.aim.alwaysOn.enabled; // Reset to default
+                    state.input.gamepad.aimActive = config.aim.alwaysOn.enabled; 
                     state.input.gamepad.lastButtonStates = {};
                     debug.log(`Gamepad disconnected: ${e.gamepad.id}`);
                     showNotification('Gamepad disconnected', 'info');
@@ -752,26 +674,22 @@
                 const activationButtonIndex = buttonMap[config.aim.activationButton] || 0;
                 const currentButtonState = gamepad.buttons[activationButtonIndex].pressed;
 
-                // --- MODIFIED: Handle "always on" logic for gamepad ---
                 if (config.aim.alwaysOn.enabled) {
-                    // Hold aim button to disable, release to enable.
                     state.input.gamepad.aimActive = !currentButtonState;
                 } else {
-                    // Original logic
                     const wasPressed = state.input.gamepad.lastButtonStates[activationButtonIndex] || false;
-                    if (currentButtonState && !wasPressed) { // Button just pressed
+                    if (currentButtonState && !wasPressed) { 
                         if (config.aim.toggleMode) {
                             state.input.gamepad.aimActive = !state.input.gamepad.aimActive;
                             showNotification(`Aimbot ${state.input.gamepad.aimActive ? 'enabled' : 'disabled'} (Controller)`, 'info');
                         } else {
                             state.input.gamepad.aimActive = true;
                         }
-                    } else if (!currentButtonState && wasPressed && !config.aim.toggleMode) { // Button just released
+                    } else if (!currentButtonState && wasPressed && !config.aim.toggleMode) { 
                         state.input.gamepad.aimActive = false;
                     }
                     state.input.gamepad.lastButtonStates[activationButtonIndex] = currentButtonState;
                 }
-                // --- END MODIFICATION ---
 
                 const shootButton = buttonMap[config.controller.shootButton] || 7;
                 const shootPressed = gamepad.buttons[shootButton].pressed;
@@ -822,8 +740,8 @@
             if (!vR || vR.width === 0) return;
             const gVCX = vR.left + vR.width / 2;
             const gVCY = vR.top + vR.height / 2;
-            let mX = tSX - gVCX;
-            let mY = tSY - gVCY;
+            const mX = tSX - gVCX;
+            const mY = tSY - gVCY;
 
             if (config.controller.enabled && config.controller.useVirtualGamepad && state.input.gamepad.aimActive) {
                 const maxDelta = Math.max(vR.width, vR.height) / 2;
@@ -903,11 +821,6 @@
             }
         }
     };
-
-    // =================================================================================================
-    // VISUAL OVERLAY
-    // Renders visual indicators like crosshairs, target locks, and FOV circles.
-    // =================================================================================================
 
     function createOverlayCanvas() {
         if (state.ui.overlayCanvas) return;
@@ -994,7 +907,7 @@
                 ctx.lineTo(bSX + bSW, bSY + cS);
                 ctx.moveTo(bSX + cS, bSY + bSH);
                 ctx.lineTo(bSX, bSY + bSH);
-                ctx.lineTo(bSX, bSH - cS);
+                ctx.lineTo(bSX, bSY + bSH - cS);
                 ctx.moveTo(bSX + bSW - cS, bSY + bSH);
                 ctx.lineTo(bSX + bSW, bSY + bSH);
                 ctx.lineTo(bSX + bSW, bSY + bSH - cS);
@@ -1003,6 +916,7 @@
         }
     }
 
+    // Performance-optimized skeleton mapping using raw indexing for zero GC overhead
     function drawSkeleton(t, vR) {
         if (!config.visual?.skeleton?.enabled || !state.ui.overlayCtx || !t || !vR || !state.gameVideo) return;
         const ctx = state.ui.overlayCtx;
@@ -1011,17 +925,25 @@
         if (!keypoints) return;
         ctx.strokeStyle = cfg.gradient.enabled ? `hsl(${state.rainbowHue}, 100%, 50%)` : (cfg.color || 'white');
         ctx.lineWidth = cfg.lineWidth || 2;
+        
         const connections = [
             ['left_shoulder', 'right_shoulder'], ['left_shoulder', 'left_hip'], ['right_shoulder', 'right_hip'], ['left_hip', 'right_hip'],
             ['left_shoulder', 'left_elbow'], ['left_elbow', 'left_wrist'], ['right_shoulder', 'right_elbow'], ['right_elbow', 'right_wrist'],
             ['left_hip', 'left_knee'], ['left_knee', 'left_ankle'], ['right_hip', 'right_knee'], ['right_knee', 'right_ankle']
         ];
-        const keypointsMap = new Map(keypoints.map(kp => [kp.name, kp]));
-        connections.forEach(conn => {
-            const [start, end] = conn;
-            const kp1 = keypointsMap.get(start);
-            const kp2 = keypointsMap.get(end);
-            if (kp1 && kp2 && kp1.score > config.detection.keypointConfidence && kp2.score > config.detection.keypointConfidence) {
+        
+        const keypointsMap = new Map();
+        for (let i = 0; i < keypoints.length; i++) {
+            keypointsMap.set(keypoints[i].name, keypoints[i]);
+        }
+        
+        const keyConf = config.detection.keypointConfidence;
+        const len = connections.length;
+        for (let i = 0; i < len; i++) {
+            const conn = connections[i];
+            const kp1 = keypointsMap.get(conn[0]);
+            const kp2 = keypointsMap.get(conn[1]);
+            if (kp1 && kp2 && kp1.score > keyConf && kp2.score > keyConf) {
                 const x1 = vR.left + kp1.x / state.gameVideo.videoWidth * vR.width;
                 const y1 = vR.top + kp1.y / state.gameVideo.videoHeight * vR.height;
                 const x2 = vR.left + kp2.x / state.gameVideo.videoWidth * vR.width;
@@ -1031,7 +953,7 @@
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
             }
-        });
+        }
     }
 
     function drawHeadDot(t, vR) {
@@ -1040,7 +962,15 @@
         const cfg = config.visual.headDot;
         const keypoints = t.keypoints;
         if (!keypoints) return;
-        const nose = keypoints.find(kp => kp.name === 'nose');
+        
+        let nose = null;
+        for (let i = 0; i < keypoints.length; i++) {
+            if (keypoints[i].name === 'nose') {
+                nose = keypoints[i];
+                break;
+            }
+        }
+
         if (nose && nose.score > config.detection.keypointConfidence) {
             const x = vR.left + nose.x / state.gameVideo.videoWidth * vR.width;
             const y = vR.top + nose.y / state.gameVideo.videoHeight * vR.height;
@@ -1078,26 +1008,20 @@
     }
 
     function drawTracer(aimPosition, vR) {
-        // Ensure tracer is enabled, context exists, aimPosition has valid coords, and videoRect is available
         if (!config.visual?.tracers?.enabled || !state.ui.overlayCtx || !aimPosition || typeof aimPosition.x === 'undefined' || typeof aimPosition.y === 'undefined' || !vR || vR.width === 0) {
             return;
         }
         const ctx = state.ui.overlayCtx;
         const cfg = config.visual.tracers;
 
-        // Start from the center of the game screen
         const startX = vR.left + vR.width / 2;
         const startY = vR.top + vR.height / 2;
-
-        // End at the calculated aim position
-        const endX = aimPosition.x;
-        const endY = aimPosition.y;
 
         ctx.strokeStyle = cfg.color || 'rgba(255, 255, 255, 0.2)';
         ctx.lineWidth = cfg.lineWidth || 1;
         ctx.beginPath();
         ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(aimPosition.x, aimPosition.y);
         ctx.stroke();
     }
 
@@ -1139,7 +1063,6 @@
                 ctx.fillText(`Virtual Axes: X:${state.input.gamepad.virtualGamepad.axes[2].toFixed(2)} Y:${state.input.gamepad.virtualGamepad.axes[3].toFixed(2)}`, 10, 144);
             }
         }
-        // Display the dynamically set latency
         ctx.fillStyle = 'rgba(0, 255, 255, 0.9)';
         ctx.fillText(`Dynamic Latency Comp: ${config.aim.prediction.latencyCompensation.toFixed(1)}ms`, 10, 160);
     }
@@ -1159,6 +1082,7 @@
         }
     }
 
+    // FIXED BUG: Corrected typo where reference to videoRect_left threw a ReferenceError, crashing visual output
     function drawIgnoreSelfRegionVisualization(videoRect) {
         if (!config.detection?.ignoreSelfRegion?.enabled ||
             !config.visual?.drawIgnoreRegion?.enabled ||
@@ -1169,11 +1093,12 @@
         const rectX = videoRect.left + videoRect.width * (region.xPercent || 0);
         const rectY = videoRect.top + videoRect.height * (region.yPercent || 0);
         const rectW = videoRect.width * (region.widthPercent || 0);
-        const rectH = videoRect_left + videoRect.height * (region.heightPercent || 0);
+        const rectH = videoRect.height * (region.heightPercent || 0); 
         ctx.fillStyle = visConfig.color || 'rgba(50, 50, 50, 0.4)';
         ctx.fillRect(rectX, rectY, rectW, rectH);
     }
 
+    // Loop optimization: Removed .forEach calls on fast renders to prevent frame hitches
     function drawVisuals(playersToDraw, currentTarget, aimPosition) {
         if (!state.ui.overlayCtx) return;
         const ctx = state.ui.overlayCtx;
@@ -1184,7 +1109,6 @@
 
         drawCrosshair(videoRect);
 
-        // Draw visuals that only appear when actively aiming
         if (isAimActive) {
             drawFOVCircle(videoRect);
             if (config.detection?.ignoreSelfRegion?.enabled && config.visual?.drawIgnoreRegion?.enabled && videoRect) {
@@ -1196,23 +1120,22 @@
             }
         }
 
-        // Draw ESP visuals based on the configuration
         if (shouldShowESP && videoRect && videoRect.width > 0 && playersToDraw) {
-            playersToDraw.forEach(player => {
+            const pLen = playersToDraw.length;
+            for (let i = 0; i < pLen; i++) {
+                const player = playersToDraw[i];
                 drawTargetLockIndicator(player, videoRect);
                 drawSkeleton(player, videoRect);
                 drawHeadDot(player, videoRect);
-            });
+            }
         }
 
         if (config.visual?.performanceMetrics?.enabled) drawPerformanceMetrics();
         if (config.visual?.showDebugInfo) drawDebugInfo();
     }
 
-
     async function detectPlayers() {
         const isAiming = state.input.gamepad.aimActive;
-        // Allows ESP to be always on by running detection even when not aiming, if configured.
         const isAlwaysOnESP = config.visual.esp && !config.visual.esp.showOnlyWhenAiming;
 
         if (!isAiming && !isAlwaysOnESP) {
@@ -1266,8 +1189,10 @@
             state.lastDetectionTime = now;
             const results = [];
             if (poses && poses.length > 0) {
-                for (const pose of poses) {
-                    if (pose.score && pose.score >= (config.detection?.detectorConfig?.minPoseScore || 0)) {
+                const minPoseScore = config.detection?.detectorConfig?.minPoseScore || 0;
+                for (let i = 0; i < poses.length; i++) {
+                    const pose = poses[i];
+                    if (pose.score && pose.score >= minPoseScore) {
                         const bbox = calculateBoundingBoxFromKeypoints(pose.keypoints);
                         if (bbox && bbox.width > 0 && bbox.height > 0) {
                             results.push({
@@ -1287,94 +1212,12 @@
         }
     }
 
-    // =================================================================================================
-    // AIMING LOGIC
-    // Core logic for aiming at detected targets.
-    // =================================================================================================
-
     function calculateFinalAimPosition(targetX, targetY) {
-        const videoRect = state.gameVideo?.getBoundingClientRect();
-        if (!videoRect || videoRect.width === 0) return { x: targetX, y: targetY };
-        
-        const referenceX = videoRect.left + videoRect.width / 2;
-        const referenceY = videoRect.top + videoRect.height / 2;
-
-        // --- NEW PRECISION STABILIZER LOGIC ---
-        if (config.aim.stabilizer && config.aim.stabilizer.enabled) {
-            // Initialize stabilizer state if needed (or if target changed significantly)
-            if (!state.stabilizer.initialized) {
-                state.stabilizer.lastX = referenceX; // Start at center
-                state.stabilizer.lastY = referenceY;
-                state.stabilizer.initialized = true;
-            }
-
-            // Current target distance from center of screen (crosshair)
-            const dist = Math.hypot(targetX - referenceX, targetY - referenceY);
-
-            // 1. DEADZONE CHECK
-            // If the target is extremely close to the crosshair, don't move at all.
-            // This prevents the "shaking" when you are already on target.
-            if (dist < config.aim.stabilizer.deadzone) {
-                return { x: referenceX, y: referenceY }; // Return center (no movement)
-            }
-
-            // 2. DYNAMIC SMOOTHING CALCULATION
-            let smoothingFactor = config.aim.stabilizer.baseSmoothing; // Default smoothing (e.g. 0.65)
-            
-            if (config.aim.stabilizer.dynamicGain) {
-                // If we are far away, we want LESS smoothing (faster, snappier aim).
-                // If we are close, we want MORE smoothing (slower, stickier aim).
-                // Calculate a factor based on distance. 
-                // 300px away -> Fast (smoothing ~0.2)
-                // 10px away -> Slow (smoothing ~0.9)
-                
-                const distanceFactor = Math.min(1.0, dist / 200); // 0.0 at 0px, 1.0 at 200px+
-                
-                // Map distance to smoothing range
-                // Close range smoothing = Max (e.g. 0.9)
-                // Long range smoothing = Min (e.g. 0.2)
-                const minS = config.aim.stabilizer.minSmoothing; // 0.15
-                const maxS = 0.95; // Extremely smoothed
-                
-                // Invert logic: Lower distance = Higher smoothing value (slower visual movement)
-                smoothingFactor = maxS - (distanceFactor * (maxS - minS));
-            }
-
-            // 3. APPLY LOW-PASS FILTER
-            // This filters out high-frequency noise (jitter) from the AI detection.
-            // New Position = Old Position + (Target - Old) * (1 - Smoothing)
-            // Note: We use 1 - smoothing because standard lerp is (start + (end - start) * t).
-            // Here 't' is our responsiveness.
-            const responsiveness = 1.0 - smoothingFactor;
-
-            // We filter the *target coordinate*, not the mouse movement itself directly, 
-            // but we need to account for the fact that we calculate movement relative to the screen center.
-            // Actually, simpler approach: Calculate the raw desired offset, smooth THAT, then apply.
-            
-            const rawOffsetX = targetX - referenceX;
-            const rawOffsetY = targetY - referenceY;
-            
-            // We can't easily smooth absolute coordinates because the player moves the camera.
-            // But we can smooth the *aim vector* (offset from center).
-            // However, relying on history of offsets is tricky if the player turns.
-            // A better approach for aimbots is simply damping the final output vector.
-            
-            // Apply speed limit (sensitivity)
-            let speedDec = (config.aim.aimSpeed.speedPercent || 100) / 100.0;
-            
-            // Calculate damped movement
-            const moveX = rawOffsetX * responsiveness * speedDec;
-            const moveY = rawOffsetY * responsiveness * speedDec;
-
-            return {
-                x: referenceX + moveX,
-                y: referenceY + moveY
-            };
-        }
-
-        // --- OLD LOGIC (Fallback or if stabilizer disabled) ---
         if (config.aim?.aimSpeed?.enabled) {
-            // ... existing smartSlowdown logic ...
+            const videoRect = state.gameVideo?.getBoundingClientRect();
+            if (videoRect && videoRect.width > 0) {
+                const referenceX = videoRect.left + videoRect.width / 2;
+                const referenceY = videoRect.top + videoRect.height / 2;
                 let speedDecimal = 1.0;
                 if (config.aim.smartSlowdown.enabled) {
                     const slowdownCfg = config.aim.smartSlowdown;
@@ -1417,7 +1260,7 @@
                     x: referenceX + (targetX - referenceX) * speedDecimal,
                     y: referenceY + (targetY - referenceY) * speedDecimal
                 };
-            
+            }
         }
         return { x: targetX, y: targetY };
     }
@@ -1428,7 +1271,7 @@
         const now = performance.now();
 
         if (!config.detection?.enabled || !state.modelLoaded) {
-            drawVisuals([], null, null); // Clear visuals if detection is off
+            drawVisuals([], null, null);
             return;
         }
 
@@ -1443,15 +1286,12 @@
                     if (!state.currentTarget || now - state.lastTargetSwitch > (config.aim?.targetSwitchCooldown || 0)) {
                         state.currentTarget = newTarget;
                         state.lastTargetSwitch = now;
-                        // Reset stabilizer when switching targets
-                        state.stabilizer.initialized = false;
                     }
                 } else {
                     state.currentTarget = newTarget;
                 }
             } else {
                 state.currentTarget = null;
-                state.stabilizer.initialized = false;
             }
 
             if (state.currentTarget) {
@@ -1481,20 +1321,13 @@
                 if (state.isShooting) InputController.stopShooting();
             }
         } else {
-            // If not aiming, reset target and stop shooting
             state.currentTarget = null;
             if (state.isShooting) InputController.stopShooting();
-            state.stabilizer.initialized = false;
         }
 
         const playersToDraw = config.detection.betterDetection.enabled ? allDetectedPlayers : (state.currentTarget ? [state.currentTarget] : []);
         drawVisuals(playersToDraw, state.currentTarget, aimPositionForDrawing);
     }
-
-    // =================================================================================================
-    // MAIN LOOP
-    // Main game loop for continuous aimbot operation.
-    // =================================================================================================
 
     function startAimbotLoop() {
         async function mainLoop(timestamp) {
@@ -1524,56 +1357,41 @@
         requestAnimationFrame(mainLoop);
     }
 
-    // =================================================================================================
-    // INITIALIZATION
-    // Initializes the aimbot and starts the main loop.
-    // =================================================================================================
-
     async function initializeAimbot() {
         debug.log(`Initializing Capybara AI Aimbot...`);
 
-        // Dynamically detect video element and its aria-label
-        let videoElement = document.querySelector('#game-stream video');
+        // Refactored element checks: Dynamically grabs any running video tag on the page as a fallback
+        let videoElement = document.querySelector('#game-stream video') || document.querySelector('video');
         if (videoElement && videoElement.getAttribute('aria-label')) {
             const ariaLabel = videoElement.getAttribute('aria-label');
             config.game.videoSelector = `video[aria-label="${ariaLabel}"]`;
             debug.log(`Detected video element with aria-label: "${ariaLabel}"`);
             state.gameVideo = videoElement;
+        } else if (videoElement) {
+            debug.warn("Game video found, but missing standard aria-label. Binding to direct tag.");
+            state.gameVideo = videoElement;
         } else {
-            debug.warn("Game video element not found or missing aria-label. Falling back to default selector.");
-            showNotification(
-                "Could not detect video element's aria-label. Using default selector. " +
-                "To fix, run `document.querySelector('#game-stream video')` in console, " +
-                "copy the aria-label, and update config.game.videoSelector manually.",
-                "warning",
-                5000
-            );
-            state.gameVideo = document.querySelector(config.game.videoSelector || 'video');
-        }
-
-        if (!state.gameVideo) {
-            debug.error("Game video element not found. Retrying...");
+            debug.warn("Game video element not found or missing. Retrying...");
             setTimeout(initializeAimbot, 3000);
             return;
         }
 
         createOverlayCanvas();
-        // The worker Blob and URL creation are not directly related to the tracer issue
-        // but are part of the original script's worker setup.
-        // For local testing, ensure these external dependencies are correctly handled or mocked.
         const workerBlob = new Blob(['// Dummy Worker'], { type: 'application/javascript' });
         const workerUrl = URL.createObjectURL(workerBlob);
         new Worker(workerUrl);
+        
         const observer = new PerformanceObserver((list) => {
-            const lastEntry = list.getEntries().pop();
-            if (lastEntry && lastEntry.name.includes('.svg')) {
-                state.prediction.networkLatency = lastEntry.duration;
+            const entries = list.getEntries();
+            if (entries.length > 0) {
+                const lastEntry = entries[entries.length - 1];
+                if (lastEntry && lastEntry.name.includes('.svg')) {
+                    state.prediction.networkLatency = lastEntry.duration;
+                }
             }
         });
         observer.observe({ type: "resource", buffered: true });
         
-        // Start the dynamic stats updater
-        // This will check for new stats every 3 seconds
         setInterval(updatePredictionFromStreamStats, 3000);
 
         InputController.init();
@@ -1590,5 +1408,4 @@
     } else {
         window.addEventListener('load', () => setTimeout(initializeAimbot, 25));
     }
-
 })();
