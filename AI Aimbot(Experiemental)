@@ -24,8 +24,9 @@
             }
         },
         game: {
-            videoSelector: 'video[aria-label="Game Stream for unknown title"]',
-            containerSelector: '#game-stream',
+            videoSelector: '#remote-video',
+            containerSelector: 'gfn-browser-streamer',
+            fullscreenContainerSelector: '#fullscreen-container',
             autoShoot: false,
             triggerOptions: {
                 delayBeforeShoot: 10,
